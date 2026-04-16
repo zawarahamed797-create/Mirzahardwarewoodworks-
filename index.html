@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mirza Hardware & Woodworks</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root { --primary: #2c3e50; --accent: #e67e22; --light: #f4f4f4; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background: var(--light); direction: ltr; }
+        header { background: var(--primary); color: white; padding: 20px; text-align: center; }
+        nav { background: #34495e; padding: 10px; text-align: center; position: sticky; top: 0; z-index: 1000; }
+        nav a { color: white; margin: 0 15px; text-decoration: none; font-weight: bold; }
+        section { padding: 40px 20px; max-width: 1000px; margin: auto; background: white; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h2 { color: var(--primary); border-bottom: 2px solid var(--accent); padding-bottom: 10px; }
+        .status-board { text-align: center; font-size: 24px; padding: 20px; background: #27ae60; color: white; border-radius: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background: var(--primary); color: white; }
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 20px; }
+        .product { border: 1px solid #ddd; padding: 15px; border-radius: 8px; text-align: center; }
+        input[type="number"] { width: 50px; padding: 5px; }
+        button { background: var(--accent); color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 4px; }
+        button:hover { background: #d35400; }
+        #admin-section { background: #ffeaa7; border: 2px dashed #fab1a0; }
+        .cart-badge { background: red; color: white; padding: 2px 8px; border-radius: 50%; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>MIRZA HARDWARE & WOODWORKS</h1>
+    <p>Quality Woodwork & Premium Hardware Tools</p>
+</header>
+
+<nav>
+    <a href="#carpenter">Status</a>
+    <a href="#rates">Service Rates</a>
+    <a href="#shop">Hardware Shop</a>
+    <a href="#agreement">Agreement</a>
+    <a href="#admin-section">Admin Panel</a>
+    <a href="#">Cart <span id="cart-count" class="cart-badge">0</span></a>
+</nav>
+
+<section id="carpenter">
+    <h2>Carpenter Availability</h2>
+    <div id="status-display" class="status-board">Carpenter Available ✅</div>
+</section>
+
+<section id="rates">
+    <h2>Kitchen & Wardrobe Rates</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Service Name</th>
+                <th>Without Material (Rate)</th>
+                <th>With Material (Rate)</th>
+                <th>Order</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Modern Kitchen</td>
+                <td>Rs. 750 /sqft</td>
+                <td>Rs. 2400 /sqft</td>
+                <td><button onclick="addToCart('Kitchen Service', 2400)">Add to Cart</button></td>
+            </tr>
+            <tr>
+                <td>Wardrobe / Almari</td>
+                <td>Rs. 550 /sqft</td>
+                <td>Rs. 1900 /sqft</td>
+                <td><button onclick="addToCart('Wardrobe Service', 1900)">Add to Cart</button></td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+
+<section id="shop">
+    <h2>Hardware Materials</h2>
+    <div class="product-grid">
+        <div class="product">
+            <h3>Handle Lock</h3>
+            <p>Rate: Rs. <span id="rate-lock">1500</span></p>
+            Qty: <input type="number" id="q-lock" value="1">
+            <button onclick="addToCart('Handle Lock', 1500, 'q-lock')">Add</button>
+        </div>
+        <div class="product">
+            <h3>Wardrobe Handle</h3>
+            <p>Rate: Rs. <span id="rate-handle">450</span></p>
+            Qty: <input type="number" id="q-handle" value="1">
+            <button onclick="addToCart('Handle', 450, 'q-handle')">Add</button>
+        </div>
+        <div class="product">
+            <h3>Premium Screws (Box)</h3>
+            <p>Rate: Rs. <span id="rate-screw">800</span></p>
+            Qty: <input type="number" id="q-screw" value="1">
+            <button onclick="addToCart('Screws', 800, 'q-screw')">Add</button>
+        </div>
+        <div class="product">
+            <h3>Wood Trim (Rft)</h3>
+            <p>Rate: Rs. <span id="rate-trim">120</span></p>
+            Qty: <input type="number" id="q-trim" value="1">
+            <button onclick="addToCart('Trim', 120, 'q-trim')">Add</button>
+        </div>
+    </div>
+</section>
+
+<section id="agreement">
+    <h2>Work Agreement</h2>
+    <div id="agreement-box" style="border: 1px solid #ccc; padding: 20px; background: #fff;">
+        <h3 style="text-align: center;">TERMS AND CONDITIONS</h3>
+        <p id="agreement-text">
+            1. Mirza Hardware & Woodworks stands responsible for material quality.<br>
+            2. 50% payment is required as an advance for starting the work.<br>
+            3. The project will be completed within the agreed timeline.<br>
+            4. This agreement is valid for 10 years as per company policy.
+        </p>
+    </div>
+    <br>
+    <button onclick="downloadAgreement()" style="background: green;">Download Official Agreement (PDF)</button>
+</section>
+
+<section id="admin-section">
+    <h2>Admin Control Panel (Locked)</h2>
+    <div style="display: flex; flex-wrap: wrap; gap: 20px;">
+        <div style="flex: 1; min-width: 250px;">
+            <h3>Update Availability</h3>
+            <button onclick="changeStatus('Available ✅', '#27ae60')">Set Available</button>
+            <button onclick="changeStatus('Busy / Booked ❌', '#c0392b')">Set Busy</button>
+        </div>
+        <div style="flex: 1; min-width: 250px;">
+            <h3>Change Shop Rates</h3>
+            <select id="item-to-update">
+                <option value="rate-lock">Handle Lock</option>
+                <option value="rate-handle">Wardrobe Handle</option>
+                <option value="rate-screw">Screws</option>
+            </select>
+            <input type="number" id="new-price" placeholder="New Price">
+            <button onclick="updatePrice()">Update</button>
+        </div>
+    </div>
+</section>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-analytics.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAcnABGfMDMVt5zehbLKZxbbo86yaJKUmI",
+    authDomain: "mirzahardwarewoodworks-28702.firebaseapp.com",
+    projectId: "mirzahardwarewoodworks-28702",
+    storageBucket: "mirzahardwarewoodworks-28702.firebasestorage.app",
+    messagingSenderId: "163811962022",
+    appId: "1:163811962022:web:f0527001d0512e3aac5867",
+    measurementId: "G-NV1QHH07CX"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  console.log("Mirza Hardware Cloud System Initialized");
+</script>
+
+<script>
+    // Shopping Cart Array
+    let cart = [];
+
+    function addToCart(item, price, qId) {
+        let qty = qId ? document.getElementById(qId).value : 1;
+        cart.push({item, price, qty});
+        document.getElementById('cart-count').innerText = cart.length;
+        alert(item + " added to your cart!");
+    }
+
+    // Admin Functions
+    function changeStatus(text, color) {
+        let board = document.getElementById('status-display');
+        board.innerText = "Carpenter " + text;
+        board.style.background = color;
+    }
+
+    function updatePrice() {
+        let itemId = document.getElementById('item-to-update').value;
+        let newPrice = document.getElementById('new-price').value;
+        if(newPrice) {
+            document.getElementById(itemId).innerText = newPrice;
+            alert("Price Updated Successfully!");
+        }
+    }
+
+    // PDF Download Function
+    function downloadAgreement() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        let content = document.getElementById('agreement-text').innerText;
+        
+        doc.setFontSize(18);
+        doc.text("MIRZA HARDWARE & WOODWORKS", 10, 20);
+        doc.setFontSize(12);
+        doc.text("Official Project Agreement", 10, 30);
+        doc.text("--------------------------------------------------", 10, 35);
+        doc.text(content, 10, 50);
+        doc.text("Authorized Signature: Mirza Zawar", 10, 100);
+        
+        doc.save("Mirza_Woodworks_Agreement.pdf");
+    }
+</script>
+
+</body>
+  </html>
+
