@@ -10,7 +10,7 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background: var(--light); direction: ltr; }
         header { background: var(--primary); color: white; padding: 20px; text-align: center; }
         nav { background: #34495e; padding: 10px; text-align: center; position: sticky; top: 0; z-index: 1000; }
-        nav a { color: white; margin: 0 15px; text-decoration: none; font-weight: bold; }
+        nav a { color: white; margin: 0 15px; text-decoration: none; font-weight: bold; cursor: pointer; }
         section { padding: 40px 20px; max-width: 1000px; margin: auto; background: white; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         h2 { color: var(--primary); border-bottom: 2px solid var(--accent); padding-bottom: 10px; }
         .status-board { text-align: center; font-size: 24px; padding: 20px; background: #27ae60; color: white; border-radius: 10px; }
@@ -18,12 +18,16 @@
         th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
         th { background: var(--primary); color: white; }
         .product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 20px; }
-        .product { border: 1px solid #ddd; padding: 15px; border-radius: 8px; text-align: center; }
-        input[type="number"] { width: 50px; padding: 5px; }
+        .product { border: 1px solid #ddd; padding: 15px; border-radius: 8px; text-align: center; position: relative; }
+        input[type="number"] { width: 60px; padding: 5px; }
         button { background: var(--accent); color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 4px; }
         button:hover { background: #d35400; }
-        #admin-section { background: #ffeaa7; border: 2px dashed #fab1a0; }
         .cart-badge { background: red; color: white; padding: 2px 8px; border-radius: 50%; font-size: 12px; }
+        
+        /* Admin specific styling */
+        #admin-section { display: none; background: #ffeaa7; border: 2px dashed #fab1a0; margin-top: 20px; }
+        .admin-btn { background: #333; margin-top: 10px; font-size: 12px; display: none; }
+        .admin-input { display: none; width: 80px; margin-bottom: 5px; }
     </style>
 </head>
 <body>
@@ -38,7 +42,7 @@
     <a href="#rates">Service Rates</a>
     <a href="#shop">Hardware Shop</a>
     <a href="#agreement">Agreement</a>
-    <a href="#admin-section">Admin Panel</a>
+    <a onclick="unlockAdmin()">Admin Login 🔒</a>
     <a href="#">Cart <span id="cart-count" class="cart-badge">0</span></a>
 </nav>
 
@@ -53,22 +57,22 @@
         <thead>
             <tr>
                 <th>Service Name</th>
-                <th>Without Material (Rate)</th>
-                <th>With Material (Rate)</th>
+                <th>Without Material</th>
+                <th>With Material</th>
                 <th>Order</th>
             </tr>
         </thead>
         <tbody>
             <tr>
                 <td>Modern Kitchen</td>
-                <td>Rs. 750 /sqft</td>
-                <td>Rs. 2400 /sqft</td>
+                <td>Rs. <span id="rate-k-wo">750</span>/sqft</td>
+                <td>Rs. <span id="rate-k-w">2400</span>/sqft</td>
                 <td><button onclick="addToCart('Kitchen Service', 2400)">Add to Cart</button></td>
             </tr>
             <tr>
                 <td>Wardrobe / Almari</td>
-                <td>Rs. 550 /sqft</td>
-                <td>Rs. 1900 /sqft</td>
+                <td>Rs. <span id="rate-w-wo">550</span>/sqft</td>
+                <td>Rs. <span id="rate-w-w">1900</span>/sqft</td>
                 <td><button onclick="addToCart('Wardrobe Service', 1900)">Add to Cart</button></td>
             </tr>
         </tbody>
@@ -81,25 +85,33 @@
         <div class="product">
             <h3>Handle Lock</h3>
             <p>Rate: Rs. <span id="rate-lock">1500</span></p>
-            Qty: <input type="number" id="q-lock" value="1">
+            <input type="number" class="admin-input" id="inp-lock" placeholder="New Price">
+            <button class="admin-btn" onclick="updatePrice('rate-lock', 'inp-lock')">Update Price</button>
+            <br> Qty: <input type="number" id="q-lock" value="1">
             <button onclick="addToCart('Handle Lock', 1500, 'q-lock')">Add</button>
         </div>
         <div class="product">
             <h3>Wardrobe Handle</h3>
             <p>Rate: Rs. <span id="rate-handle">450</span></p>
-            Qty: <input type="number" id="q-handle" value="1">
+            <input type="number" class="admin-input" id="inp-handle" placeholder="New Price">
+            <button class="admin-btn" onclick="updatePrice('rate-handle', 'inp-handle')">Update Price</button>
+            <br> Qty: <input type="number" id="q-handle" value="1">
             <button onclick="addToCart('Handle', 450, 'q-handle')">Add</button>
         </div>
         <div class="product">
             <h3>Premium Screws (Box)</h3>
             <p>Rate: Rs. <span id="rate-screw">800</span></p>
-            Qty: <input type="number" id="q-screw" value="1">
+            <input type="number" class="admin-input" id="inp-screw" placeholder="New Price">
+            <button class="admin-btn" onclick="updatePrice('rate-screw', 'inp-screw')">Update Price</button>
+            <br> Qty: <input type="number" id="q-screw" value="1">
             <button onclick="addToCart('Screws', 800, 'q-screw')">Add</button>
         </div>
         <div class="product">
             <h3>Wood Trim (Rft)</h3>
             <p>Rate: Rs. <span id="rate-trim">120</span></p>
-            Qty: <input type="number" id="q-trim" value="1">
+            <input type="number" class="admin-input" id="inp-trim" placeholder="New Price">
+            <button class="admin-btn" onclick="updatePrice('rate-trim', 'inp-trim')">Update Price</button>
+            <br> Qty: <input type="number" id="q-trim" value="1">
             <button onclick="addToCart('Trim', 120, 'q-trim')">Add</button>
         </div>
     </div>
@@ -121,30 +133,23 @@
 </section>
 
 <section id="admin-section">
-    <h2>Admin Control Panel (Locked)</h2>
+    <h2>Admin Controls - Welcome Mirza Zawar</h2>
     <div style="display: flex; flex-wrap: wrap; gap: 20px;">
-        <div style="flex: 1; min-width: 250px;">
+        <div style="flex: 1;">
             <h3>Update Availability</h3>
             <button onclick="changeStatus('Available ✅', '#27ae60')">Set Available</button>
             <button onclick="changeStatus('Busy / Booked ❌', '#c0392b')">Set Busy</button>
         </div>
-        <div style="flex: 1; min-width: 250px;">
-            <h3>Change Shop Rates</h3>
-            <select id="item-to-update">
-                <option value="rate-lock">Handle Lock</option>
-                <option value="rate-handle">Wardrobe Handle</option>
-                <option value="rate-screw">Screws</option>
-            </select>
-            <input type="number" id="new-price" placeholder="New Price">
-            <button onclick="updatePrice()">Update</button>
+        <div style="flex: 1;">
+            <h3>Instruction</h3>
+            <p>Ab aap Hardware shop ke items ke niche "Update Price" button se rates badal sakte hain.</p>
+            <button onclick="location.reload()" style="background:#555">Logout Admin</button>
         </div>
     </div>
 </section>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-analytics.js";
-
   const firebaseConfig = {
     apiKey: "AIzaSyAcnABGfMDMVt5zehbLKZxbbo86yaJKUmI",
     authDomain: "mirzahardwarewoodworks-28702.firebaseapp.com",
@@ -154,15 +159,24 @@
     appId: "1:163811962022:web:f0527001d0512e3aac5867",
     measurementId: "G-NV1QHH07CX"
   };
-
   const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-  console.log("Mirza Hardware Cloud System Initialized");
 </script>
 
 <script>
-    // Shopping Cart Array
     let cart = [];
+
+    // Security: Admin Login
+    function unlockAdmin() {
+        let pass = prompt("Admin Password Darj Karein:");
+        if(pass === "mirza786") { // Aap apna password yahan tabdeel kar sakte hain
+            document.getElementById('admin-section').style.display = 'block';
+            let adminBtns = document.querySelectorAll('.admin-btn, .admin-input');
+            adminBtns.forEach(btn => btn.style.display = 'inline-block');
+            alert("Admin Panel Unlocked! Ab aap rates update kar sakte hain.");
+        } else {
+            alert("Ghalat Password!");
+        }
+    }
 
     function addToCart(item, price, qId) {
         let qty = qId ? document.getElementById(qId).value : 1;
@@ -171,40 +185,36 @@
         alert(item + " added to your cart!");
     }
 
-    // Admin Functions
     function changeStatus(text, color) {
         let board = document.getElementById('status-display');
         board.innerText = "Carpenter " + text;
         board.style.background = color;
     }
 
-    function updatePrice() {
-        let itemId = document.getElementById('item-to-update').value;
-        let newPrice = document.getElementById('new-price').value;
-        if(newPrice) {
-            document.getElementById(itemId).innerText = newPrice;
-            alert("Price Updated Successfully!");
+    // Direct Update Function
+    function updatePrice(spanId, inputId) {
+        let newVal = document.getElementById(inputId).value;
+        if(newVal) {
+            document.getElementById(spanId).innerText = newVal;
+            alert("Rate Updated!");
+        } else {
+            alert("Pahle nayi qeemat likhein.");
         }
     }
 
-    // PDF Download Function
     function downloadAgreement() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         let content = document.getElementById('agreement-text').innerText;
-        
         doc.setFontSize(18);
         doc.text("MIRZA HARDWARE & WOODWORKS", 10, 20);
         doc.setFontSize(12);
         doc.text("Official Project Agreement", 10, 30);
-        doc.text("--------------------------------------------------", 10, 35);
         doc.text(content, 10, 50);
         doc.text("Authorized Signature: Mirza Zawar", 10, 100);
-        
-        doc.save("Mirza_Woodworks_Agreement.pdf");
+        doc.save("Mirza_Agreement.pdf");
     }
 </script>
 
 </body>
-  </html>
-
+</html>
