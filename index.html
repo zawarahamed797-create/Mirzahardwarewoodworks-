@@ -18,7 +18,6 @@
         nav a:hover { color: var(--accent); }
         
         section { padding: 40px 20px; max-width: 1000px; margin: auto; background: white; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); animation: fadeIn 1s ease-in-out; }
-        
         h2 { color: var(--primary); border-bottom: 2px solid var(--accent); padding-bottom: 10px; }
         
         .status-board { text-align: center; font-size: 24px; padding: 20px; color: white; border-radius: 10px; transition: background 0.5s ease; }
@@ -36,8 +35,13 @@
         button:hover { background: #d35400; transform: translateY(-2px); }
         
         .cart-badge { background: red; color: white; padding: 2px 8px; border-radius: 50%; font-size: 12px; }
-        
-        #admin-section { display: none; background: #ffeaa7; border: 2px dashed #fab1a0; margin-top: 20px; transition: 0.5s; }
+
+        /* Cart Modal Styling */
+        #cart-modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); overflow: auto; }
+        .cart-content { background: white; margin: 10% auto; padding: 20px; width: 80%; max-width: 600px; border-radius: 10px; animation: fadeIn 0.4s; }
+        .close-cart { float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+
+        #admin-section { display: none; background: #ffeaa7; border: 2px dashed #fab1a0; margin-top: 20px; }
         .admin-btn { background: #333; margin-top: 10px; font-size: 12px; display: none; }
         .admin-input { display: none; width: 80px; margin-bottom: 5px; }
     </style>
@@ -55,8 +59,20 @@
     <a href="#shop">Hardware Shop</a>
     <a href="#agreement">Agreement</a>
     <a onclick="unlockAdmin()">Admin Login 🔒</a>
-    <a href="#">Cart <span id="cart-count" class="cart-badge">0</span></a>
+    <a onclick="openCart()">Cart <span id="cart-count" class="cart-badge">0</span> 🛒</a>
 </nav>
+
+<div id="cart-modal">
+    <div class="cart-content">
+        <span class="close-cart" onclick="closeCart()">&times;</span>
+        <h2>Aapka Cart</h2>
+        <div id="cart-items-list">
+            </div>
+        <hr>
+        <h3>Total Bill: Rs. <span id="final-total">0</span></h3>
+        <button onclick="buyNow()" style="background: green; width: 100%; font-size: 18px;">Buy Now (Order On WhatsApp)</button>
+    </div>
+</div>
 
 <section id="carpenter">
     <h2>Carpenter Availability</h2>
@@ -79,13 +95,13 @@
                 <td>Modern Kitchen</td>
                 <td>Rs. <span id="rate-k-wo">750</span>/sqft</td>
                 <td>Rs. <span id="rate-k-w">2400</span>/sqft</td>
-                <td><button onclick="addToCart('Kitchen Service', 2400)">Add to Cart</button></td>
+                <td><button onclick="addToCart('Kitchen Service (With Material)', 2400)">Add to Cart</button></td>
             </tr>
             <tr>
                 <td>Wardrobe / Almari</td>
                 <td>Rs. <span id="rate-w-wo">550</span>/sqft</td>
                 <td>Rs. <span id="rate-w-w">1900</span>/sqft</td>
-                <td><button onclick="addToCart('Wardrobe Service', 1900)">Add to Cart</button></td>
+                <td><button onclick="addToCart('Wardrobe Service (With Material)', 1900)">Add to Cart</button></td>
             </tr>
         </tbody>
     </table>
@@ -99,7 +115,7 @@
             <p>Rate: Rs. <span id="rate-lock">1500</span></p>
             <input type="number" class="admin-input" id="inp-lock" placeholder="Rate">
             <button class="admin-btn" onclick="updatePrice('rate-lock', 'inp-lock')">Update</button>
-            <br> Qty: <input type="number" id="q-lock" value="1">
+            <br> Qty: <input type="number" id="q-lock" value="1" min="1">
             <button onclick="addToCart('Handle Lock', 1500, 'q-lock')">Add</button>
         </div>
         <div class="product">
@@ -107,7 +123,7 @@
             <p>Rate: Rs. <span id="rate-handle">450</span></p>
             <input type="number" class="admin-input" id="inp-handle" placeholder="Rate">
             <button class="admin-btn" onclick="updatePrice('rate-handle', 'inp-handle')">Update</button>
-            <br> Qty: <input type="number" id="q-handle" value="1">
+            <br> Qty: <input type="number" id="q-handle" value="1" min="1">
             <button onclick="addToCart('Handle', 450, 'q-handle')">Add</button>
         </div>
         <div class="product">
@@ -115,7 +131,7 @@
             <p>Rate: Rs. <span id="rate-screw">800</span></p>
             <input type="number" class="admin-input" id="inp-screw" placeholder="Rate">
             <button class="admin-btn" onclick="updatePrice('rate-screw', 'inp-screw')">Update</button>
-            <br> Qty: <input type="number" id="q-screw" value="1">
+            <br> Qty: <input type="number" id="q-screw" value="1" min="1">
             <button onclick="addToCart('Screws', 800, 'q-screw')">Add</button>
         </div>
         <div class="product">
@@ -123,7 +139,7 @@
             <p>Rate: Rs. <span id="rate-trim">120</span></p>
             <input type="number" class="admin-input" id="inp-trim" placeholder="Rate">
             <button class="admin-btn" onclick="updatePrice('rate-trim', 'inp-trim')">Update</button>
-            <br> Qty: <input type="number" id="q-trim" value="1">
+            <br> Qty: <input type="number" id="q-trim" value="1" min="1">
             <button onclick="addToCart('Trim', 120, 'q-trim')">Add</button>
         </div>
     </div>
@@ -173,25 +189,23 @@
 </script>
 
 <script>
-    let cart = [];
+    let cart = JSON.parse(localStorage.getItem('mirzaCart')) || [];
 
-    // Permanent Data Storage Logic
     function loadData() {
         const savedStatus = localStorage.getItem('mirzaStatus');
         const savedBg = localStorage.getItem('mirzaBg');
         if(savedStatus) {
             document.getElementById('status-display').innerText = savedStatus;
-            document.getElementById('status-display').style.background = savedBg || '#27ae60';
+            document.getElementById('status-display').style.background = savedBg;
         } else {
             document.getElementById('status-display').style.background = '#27ae60';
         }
-
-        // Load Prices
         const ids = ['rate-lock', 'rate-handle', 'rate-screw', 'rate-trim'];
         ids.forEach(id => {
             const val = localStorage.getItem(id);
             if(val) document.getElementById(id).innerText = val;
         });
+        updateCartDisplay();
     }
 
     function unlockAdmin() {
@@ -206,10 +220,42 @@
     }
 
     function addToCart(item, price, qId) {
-        let qty = qId ? document.getElementById(qId).value : 1;
-        cart.push({item, price, qty});
+        let qty = qId ? parseInt(document.getElementById(qId).value) : 1;
+        let found = cart.find(p => p.item === item);
+        if(found) { found.qty += qty; } else { cart.push({item, price, qty}); }
+        updateCartDisplay();
+        alert(item + " added to cart!");
+    }
+
+    function updateCartDisplay() {
+        localStorage.setItem('mirzaCart', JSON.stringify(cart));
         document.getElementById('cart-count').innerText = cart.length;
-        alert(item + " added to your cart!");
+        
+        let list = document.getElementById('cart-items-list');
+        let total = 0;
+        list.innerHTML = "";
+        
+        cart.forEach((p, index) => {
+            let itemTotal = p.price * p.qty;
+            total += itemTotal;
+            list.innerHTML += `<p>${index+1}. <b>${p.item}</b> - Qty: ${p.qty} - Rs. ${itemTotal} <button onclick="removeFromCart(${index})" style="background:red; padding:2px 5px; font-size:10px;">X</button></p>`;
+        });
+        document.getElementById('final-total').innerText = total;
+    }
+
+    function removeFromCart(index) {
+        cart.splice(index, 1);
+        updateCartDisplay();
+    }
+
+    function openCart() { document.getElementById('cart-modal').style.display = 'block'; }
+    function closeCart() { document.getElementById('cart-modal').style.display = 'none'; }
+
+    function buyNow() {
+        let total = document.getElementById('final-total').innerText;
+        if(total == 0) { alert("Cart khali ha!"); return; }
+        alert("Shukriya! Aapka total bill Rs. " + total + " hai. Mirza Hardware jald raabta kare ga.");
+        // Yahan aap WhatsApp link bhi add kar sakte hain
     }
 
     function changeStatus(text, color) {
@@ -224,8 +270,8 @@
         let newVal = document.getElementById(inputId).value;
         if(newVal) {
             document.getElementById(spanId).innerText = newVal;
-            localStorage.setItem(spanId, newVal); // Permanent Save
-            alert("Rate Updated Permanently!");
+            localStorage.setItem(spanId, newVal);
+            alert("Rate Updated!");
         }
     }
 
@@ -233,12 +279,8 @@
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         let content = document.getElementById('agreement-text').innerText;
-        doc.setFontSize(18);
-        doc.text("MIRZA HARDWARE & WOODWORKS", 10, 20);
-        doc.setFontSize(12);
-        doc.text("Official Project Agreement", 10, 30);
-        doc.text(content, 10, 50);
-        doc.text("Authorized Signature: Mirza Zawar", 10, 100);
+        doc.text("MIRZA HARDWARE & WOODWORKS AGREEMENT", 10, 20);
+        doc.text(content, 10, 40);
         doc.save("Mirza_Agreement.pdf");
     }
 </script>
